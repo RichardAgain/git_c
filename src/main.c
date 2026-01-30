@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     FILE *cfile;
     FILE *temp_file = tmpfile();
 
-    cfile = fopen(object_path, "r");
+    cfile = fopen(object_path, "rb");
 
     if (cfile == NULL) {
       fprintf((stderr), "File not found");
