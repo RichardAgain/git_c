@@ -1,8 +1,12 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <zconf.h>
+
+#include "zpipe.c"
 
 int main(int argc, char *argv[]) {
   // Disable output buffering
@@ -37,6 +41,59 @@ int main(int argc, char *argv[]) {
     fclose(headFile);
 
     printf("Initialized git directory\n");
+  } else if (strncmp(command, "cat-file", 8) == 0) {
+    if (argc < 4) {
+      fprintf(stderr, "Usage: ./your_program.sh cat-file [<args>] <object>\n");
+      return 1;
+    }
+
+    const char *param = argv[2];
+    const char *object_name = argv[3];
+
+    if (strcmp(argv[2], "-p") != 0) {
+      fprintf((stderr), "Argument not implemented");
+      return 1;
+    }
+
+    char object_path[200];
+    sprintf(object_path, ".git/objects/%c%c/%s", object_name[0], object_name[1],
+            object_name + 2);
+
+    FILE *cfile;
+    FILE *temp_file = tmpfile();
+
+    cfile = fopen(object_path, "r");
+
+    if (cfile == NULL) {
+      fprintf((stderr), "File not found");
+      return 1;
+    }
+
+    if (temp_file == NULL) {
+      fprintf((stderr), "Error creating file");
+      return 1;
+    }
+
+    inf(cfile, temp_file);
+    rewind(temp_file);
+
+    char buffer[100];
+
+    fgets(buffer, sizeof(buffer), temp_file);
+
+    char *fmt = strtok(buffer, " ");
+    // printf("%s\n", fmt);
+
+    char *size_string = strtok(NULL, "");
+    // printf("%s\n", size_string);
+
+    while (fgets(buffer, sizeof(buffer), temp_file) != NULL) {
+      printf("%s", buffer);
+    }
+
+    fclose(cfile);
+    fclose(temp_file);
+
   } else {
     fprintf(stderr, "Unknown command %s\n", command);
     return 1;
