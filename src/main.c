@@ -77,19 +77,45 @@ int main(int argc, char *argv[]) {
     inf(cfile, temp_file);
     rewind(temp_file);
 
-    char buffer[100];
+    char buffer[256];
 
-    fgets(buffer, sizeof(buffer), temp_file);
+    // fgets(buffer, sizeof(buffer), temp_file);
 
-    char *fmt = strtok(buffer, " ");
-    // printf("%s\n", fmt);
+    // char *delimPtr = (char *)memchr(buffer, ' ', 12);
+    // delimPtr[0] = '\0';
 
-    char *size_string = strtok(NULL, "");
-    // printf("%s\n", size_string);
+    // printf("%s\n", buffer);
+    // printf("%s\n", delimPtr + 1);
 
-    while (fgets(buffer, sizeof(buffer), temp_file) != NULL) {
-      printf("%s", buffer);
-    }
+    // char *fmt = buffer;
+    // char *size_string = delimPtr;
+
+    // printf("%s", delimPtr);
+
+    // fgets(buffer + 1, sizeof(buffer), temp_file);
+    // printf("%s", buffer);
+
+    // while (fgets(buffer, sizeof(buffer), temp_file) != NULL) {
+    //   printf("%s", buffer);
+    // }
+
+    do {
+      char c = fgetc(temp_file);
+
+      if (c == '\0') {
+        break;
+      }
+    } while (1);
+
+    do {
+      char c = fgetc(temp_file);
+
+      if (c == EOF) {
+        break;
+      }
+
+      printf("%c", c);
+    } while (1);
 
     fclose(cfile);
     fclose(temp_file);

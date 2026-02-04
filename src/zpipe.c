@@ -15,7 +15,7 @@
 #include "zlib.h"
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
+// #include <string.h>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
