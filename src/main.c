@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <zconf.h>
 
-#include "zpipe.h"
+#include "lib/zpipe.h"
 
 int main(int argc, char *argv[]) {
   // Disable output buffering
