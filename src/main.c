@@ -54,6 +54,10 @@ int main(int argc, char *argv[]) {
     hash_object(argc, argv);
   }
 
+  else if (strncmp(command, "ls-tree", 7) == 0) {
+    ls_tree(argc, argv);
+  }
+
   else {
     fprintf(stderr, "Unknown command %s\n", command);
     return 1;
