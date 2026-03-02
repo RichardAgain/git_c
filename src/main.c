@@ -58,6 +58,10 @@ int main(int argc, char *argv[]) {
     ls_tree(argc, argv);
   }
 
+  else if (strncmp(command, "write-tree", 10) == 0) {
+    write_tree(argc, argv);
+  }
+
   else {
     fprintf(stderr, "Unknown command %s\n", command);
     return 1;
