@@ -23,39 +23,43 @@ void read_tree_object(FILE *fptr) {
   char **tmp;
 
   char object_name[FILENAME_MAX];
-  char object_mode[7];
-
   size_t i;
   char c;
 
   while ((c = fgetc(fptr)) != 0) {
   }
 
-  while (fread(object_mode, 1, 6, fptr) != 0) {
-    char *cptr = (char *)memchr(object_mode, ' ', 6);
+  while ((c = fgetc(fptr)) != EOF) {
+    if (c == '\0') {
+      break;
+    }
 
-    if (cptr != NULL) {
-      *cptr = 0;
-    } else {
-      fseek(fptr, 1, SEEK_CUR);
+    while (c != ' ') {
+      c = fgetc(fptr);
+      if (c == EOF) {
+        return;
+      }
     }
 
     memset(object_name, '\0', FILENAME_MAX);
-
     i = 0;
     while ((c = fgetc(fptr)) != '\0') {
-      object_name[i] = c;
-      i++;
+      if (i + 1 < FILENAME_MAX) {
+        object_name[i++] = c;
+      }
     }
 
     tmp = realloc(file_names.data, (file_names.count + 1) * sizeof(char *));
     if (tmp == NULL) {
-      printf("reallocation failed");
+      fprintf(stderr, "reallocation failed\n");
+      return;
     }
     file_names.data = tmp;
     file_names.data[file_names.count++] = strdup(object_name);
 
-    fseek(fptr, 20, SEEK_CUR);
+    if (fseek(fptr, 20, SEEK_CUR) != 0) {
+      break;
+    }
   }
 
   qsort(file_names.data, file_names.count, sizeof(char *), compare);
@@ -64,6 +68,9 @@ void read_tree_object(FILE *fptr) {
     printf("%s\n", file_names.data[j]);
   }
 
+  for (size_t j = 0; j < file_names.count; j++) {
+    free(file_names.data[j]);
+  }
   free(file_names.data);
 }
 

@@ -1,5 +1,8 @@
 #include "objects.h"
 #include <dirent.h>
+#include <openssl/sha.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct dirent dirent;
 
@@ -7,21 +10,21 @@ void write_tree(int argc, char **argv) {
   //   DIR *rootdir;
   //   dirent *entry;
 
-  GitObject *object = {};
+  unsigned char *tree_sha = read_tree(".");
 
-  read_tree(".");
+  if (tree_sha == NULL) {
+    fprintf(stderr, "Failed to read tree\n");
+    return;
+  }
 
-  //   rootdir = opendir(".");
+  char tree_sha_hex[41];
+  for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
+    sprintf(tree_sha_hex + (i * 2), "%02x", (unsigned char)tree_sha[i]);
+  }
 
-  //   while ((entry = readdir(rootdir)) != NULL) {
-  //     if (entry->d_type == DT_REG) {
-  //     }
+  printf("%s\n", tree_sha_hex);
 
-  //     if (entry->d_type == DT_DIR) {
-  //     }
-
-  //     printf("%s\n", entry->d_name);
-  //   }
+  free(tree_sha);
 
   return;
 }

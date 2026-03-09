@@ -31,9 +31,6 @@ void hash_object(int argc, char *argv[]) {
   long content_size = ftell(ofile);
   rewind(ofile);
 
-  // fprintf(temp_file, "blob %ld", header_size);
-  // fputc('\0', temp_file);
-
   char c;
   int i = 0;
   char contents[content_size];
@@ -44,29 +41,16 @@ void hash_object(int argc, char *argv[]) {
   }
 
   int header_size = snprintf(NULL, 0, "blob %ld", content_size);
-  // int header_size = 7;
 
   int file_size = header_size + 1 + content_size;
-  // printf("%d", file_size);
 
   char to_hash[file_size];
   snprintf(to_hash, header_size + 1, "blob %ld", content_size);
   memcpy(to_hash + header_size + 1, contents, sizeof(contents));
 
-  // printf("%s\n", to_hash);
-
-  // char data[] = "Hello, world!";
-  // size_t length = strlen(data);
-
-  // unsigned char hash[SHA_DIGEST_LENGTH];
-  // SHA1(data, length, hash);
-
-  // const unsigned char str[] = "Original String";
   unsigned char hash[SHA_DIGEST_LENGTH]; // == 20
 
   SHA1((unsigned char *)to_hash, file_size, hash);
-  // SHA1((unsigned char *)to_hash, sizeof(to_hash) - 1, hash);
-  // printf("%s\n", hash);
 
   char sha1_hex[40];
   for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
@@ -81,8 +65,6 @@ void hash_object(int argc, char *argv[]) {
   char folder_path[16];
   snprintf(folder_path, sizeof(folder_path), "%s", file_path);
 
-  // printf("%s", folder_path);
-
   if (mkdir(folder_path, 0777) != 0) {
     // printf("Didnt create folder");
   };
@@ -91,7 +73,7 @@ void hash_object(int argc, char *argv[]) {
   FILE *result_file = fopen(file_path, "wb");
 
   if (result_file == NULL || temp_file == NULL) {
-    printf("Error creating file(s)");
+    perror("Error creating file(s)");
     return;
   }
 
