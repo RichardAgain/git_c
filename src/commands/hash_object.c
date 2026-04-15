@@ -1,5 +1,5 @@
 
-#include "lib/zpipe.h"
+#include "git/zpipe.h"
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <string.h>

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "objects.h"
+#include "git/objects.h"
 
 void cat_file(int argc, char *argv[]) {
   if (argc < 4) {
