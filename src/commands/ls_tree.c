@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "objects.h"
+#include "git/objects.h"
 
 typedef struct {
   char **data;

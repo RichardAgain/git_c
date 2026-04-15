@@ -1,5 +1,5 @@
-#include "lib/zpipe.h"
-#include "objects.h"
+#include "git/objects.h"
+#include "git/zpipe.h"
 #include <dirent.h>
 #include <openssl/sha.h>
 #include <stddef.h>
@@ -11,7 +11,7 @@
 #include <zconf.h>
 #include <zlib.h>
 
-#include "defs.h"
+#include "git/defs.h"
 
 void get_file_path_from_sha(char *object_path, char *object_sha) {
   sprintf(object_path, ".git/objects/%c%c/%s", object_sha[0], object_sha[1],

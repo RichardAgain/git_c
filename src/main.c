@@ -9,7 +9,7 @@
 #include <zconf.h>
 #include <zlib.h>
 
-#include "commands.h"
+#include "git/commands.h"
 
 int main(int argc, char *argv[]) {
   // Disable output buffering
