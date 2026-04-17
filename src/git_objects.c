@@ -44,6 +44,23 @@ int read_object_header(GitObject *object, FILE *file) {
   return 0;
 }
 
+int read_object_contents(GitObject *object, FILE *file, long capacity) {
+  char c;
+  int i = 0;
+  char *contents = calloc(capacity, sizeof(char));
+  if (contents == NULL) {
+    return -1;
+  }
+
+  while ((c = fgetc(file)) != '\0' && c != EOF && i < capacity - 1) {
+    contents[i++] = c;
+  }
+
+  object->contents = contents;
+
+  return i;
+}
+
 GitObject *read_git_object_from_sha(char *object_sha) {
   char path[OBJECT_PATH_LENGTH];
   get_file_path_from_sha(path, object_sha);
@@ -56,12 +73,29 @@ GitObject *read_git_object_from_sha(char *object_sha) {
   }
 
   inf(object_file, temp);
+
+  long total_size = ftell(temp);
+  if (total_size < 0) {
+    perror("ftell temp");
+    fclose(object_file);
+    fclose(temp);
+    return NULL;
+  }
+
   rewind(temp);
 
   GitObject *git_object = malloc(sizeof(GitObject));
   git_object->contents = NULL;
 
-  read_object_header(git_object, temp);
+  int header_size = read_object_header(git_object, temp);
+
+  if (read_object_contents(git_object, temp, total_size - header_size) < 0) {
+    perror("git contents");
+    free(git_object);
+    fclose(object_file);
+    fclose(temp);
+    return NULL;
+  };
 
   fclose(object_file);
   fclose(temp);

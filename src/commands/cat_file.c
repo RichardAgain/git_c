@@ -18,25 +18,7 @@ void cat_file(int argc, char *argv[]) {
     return;
   }
 
-  FILE *object_contents = read_git_object_from_sha(object_name);
+  GitObject *blob = read_git_object_from_sha(object_name);
 
-  do {
-    char c = fgetc(object_contents);
-
-    if (c == '\0') {
-      break;
-    }
-  } while (1);
-
-  do {
-    char c = fgetc(object_contents);
-
-    if (c == EOF) {
-      break;
-    }
-
-    printf("%c", c);
-  } while (1);
-
-  fclose(object_contents);
+  printf("%s", blob->contents);
 }
