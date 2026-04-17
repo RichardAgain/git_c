@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "git/objects.h"
@@ -18,7 +19,16 @@ void cat_file(int argc, char *argv[]) {
     return;
   }
 
-  GitObject *blob = read_git_object_from_sha(object_name);
+  GitObject *object = read_git_object_from_sha(object_name);
 
-  printf("%s", blob->contents);
+  if (object == NULL) {
+    perror("cat file");
+    free(object);
+  }
+
+  if (strcmp(object->header.type_s, "blob") != 0) {
+    printf("Object type not implemented: %s", object->header.type_s);
+  }
+
+  printf("%s", object->contents);
 }
