@@ -24,29 +24,49 @@ void getHexFromHash(char hex[41], unsigned char *hash) {
   }
 }
 
-FILE *read_git_object_from_sha(char *object_sha) {
-  FILE *ofile;
-  FILE *temp_file = tmpfile();
-
-  if (temp_file == NULL) {
-    fprintf((stderr), "Error creating file");
+int read_object_header(GitObject *object, FILE *file) {
+  char c;
+  int i = 0;
+  char header_s[MAX_HEADER_SIZE] = {0};
+  while ((c = fgetc(file)) != '\0' && c != EOF && i < sizeof(header_s) - 1) {
+    header_s[i++] = c;
   }
 
-  char path[200];
-  get_file_path_from_sha((char *)&path, object_sha);
+  object_header_t header = {0};
+  header.size = 0;
+  char type_s[7];
 
-  ofile = fopen(path, "rb");
+  sscanf(header_s, "%s %zu", type_s, &header.size);
+  strcpy(header.type_s, type_s);
 
-  if (ofile == NULL) {
-    fprintf((stderr), "File not found");
+  object->header = header;
+
+  return 0;
+}
+
+GitObject *read_git_object_from_sha(char *object_sha) {
+  char path[OBJECT_PATH_LENGTH];
+  get_file_path_from_sha(path, object_sha);
+
+  FILE *temp = tmpfile();
+  FILE *object_file = fopen(path, "rb");
+  if (object_file == NULL || temp == NULL) {
+    perror("read git object");
+    return NULL;
   }
 
-  inf(ofile, temp_file);
-  rewind(temp_file);
+  inf(object_file, temp);
+  rewind(temp);
 
-  fclose(ofile);
+  GitObject *git_object = malloc(sizeof(GitObject));
+  git_object->contents = NULL;
 
-  return temp_file;
+  read_object_header(git_object, temp);
+
+  fclose(object_file);
+  fclose(temp);
+
+  return git_object;
 };
 
 void writeGitObjectFromSha(unsigned char *file_contents, char *sha1_hex,

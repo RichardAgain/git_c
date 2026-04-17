@@ -1,7 +1,25 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define MAX_HEADER_SIZE 64
+#define OBJECT_PATH_LENGTH 56
+
 typedef struct {
+  // enum {
+  //   BLOB,
+  //   TREE,
+  //   COMMIT,
+  //   TAG,
+  // } type;
+
+  char type_s[7];
+  size_t size;
+} object_header_t;
+
+typedef struct {
+  object_header_t header;
+  char *contents;
+
   enum {
     BLOB,
     TREE,
@@ -23,4 +41,4 @@ typedef struct {
 unsigned char *read_tree(char *path);
 
 void get_file_path_from_sha(char *object_path, char *object_sha);
-FILE *read_git_object_from_sha(char *object_sha);
+GitObject *read_git_object_from_sha(char *object_sha);
