@@ -1,5 +1,3 @@
-
-#include <linux/limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,61 +16,25 @@ int compare(const void *a, const void *b) {
   return strcmp(*(char **)a, *(char **)b);
 }
 
-void read_tree_object(FILE *fptr) {
-  FileNames file_names = {};
-  char **tmp;
+// void read_tree_object(GitObject *tree) {
+//   FileNames file_names = {};
+//   char **tmp;
 
-  char object_name[FILENAME_MAX];
-  size_t i;
-  char c;
+//   char object_name[FILENAME_MAX];
+//   size_t i;
+//   char c;
 
-  while ((c = fgetc(fptr)) != 0) {
-  }
+//   qsort(file_names.data, file_names.count, sizeof(char *), compare);
 
-  while ((c = fgetc(fptr)) != EOF) {
-    if (c == '\0') {
-      break;
-    }
+//   for (int j = 0; j < file_names.count; j++) {
+//     printf("%s\n", file_names.data[j]);
+//   }
 
-    while (c != ' ') {
-      c = fgetc(fptr);
-      if (c == EOF) {
-        return;
-      }
-    }
-
-    memset(object_name, '\0', FILENAME_MAX);
-    i = 0;
-    while ((c = fgetc(fptr)) != '\0') {
-      if (i + 1 < FILENAME_MAX) {
-        object_name[i++] = c;
-      }
-    }
-
-    tmp = realloc(file_names.data, (file_names.count + 1) * sizeof(char *));
-    if (tmp == NULL) {
-      fprintf(stderr, "reallocation failed\n");
-      return;
-    }
-    file_names.data = tmp;
-    file_names.data[file_names.count++] = strdup(object_name);
-
-    if (fseek(fptr, 20, SEEK_CUR) != 0) {
-      break;
-    }
-  }
-
-  qsort(file_names.data, file_names.count, sizeof(char *), compare);
-
-  for (int j = 0; j < file_names.count; j++) {
-    printf("%s\n", file_names.data[j]);
-  }
-
-  for (size_t j = 0; j < file_names.count; j++) {
-    free(file_names.data[j]);
-  }
-  free(file_names.data);
-}
+//   for (size_t j = 0; j < file_names.count; j++) {
+//     free(file_names.data[j]);
+//   }
+//   free(file_names.data);
+// }
 
 void ls_tree(int argc, char *argv[]) {
   if (argc < 3) {
@@ -82,9 +44,12 @@ void ls_tree(int argc, char *argv[]) {
 
   char *object_sha = argv[2];
 
-  FILE *object_contents = read_git_object_from_sha(object_sha);
+  GitObject *object = read_git_object_from_sha(object_sha);
 
-  read_tree_object(object_contents);
+  git_tree_t *tree = read_git_tree(object);
 
-  fclose(object_contents);
+  for (int i = 0; i < tree->length; i++) {
+    printf("%s %s %s\n", tree->entries[i].mode, tree->entries[i].hex,
+           tree->entries[i].name);
+  }
 }

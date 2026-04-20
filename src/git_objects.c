@@ -101,6 +101,71 @@ GitObject *read_git_object_from_sha(char *object_sha) {
   return git_object;
 };
 
+git_tree_t *read_git_tree(GitObject *tree_data) {
+  if (tree_data == NULL) {
+    return NULL;
+  }
+
+  if (strcmp(tree_data->header.type_s, "tree") != 0) {
+    printf("Not a tree\n");
+    return NULL;
+  }
+
+  git_tree_t *git_tree = malloc(sizeof(git_tree_t));
+  git_tree->entries = calloc(20, sizeof(tree_entry_t));
+
+  char filename[FILENAME_MAX];
+  char mode[7];
+  char sha[20];
+  char hex[41];
+
+  int idx = 0;
+  int mode_idx = 0;
+  int filename_idx = 0;
+
+  int count = 0;
+
+  while (idx < tree_data->header.size) {
+    char c;
+    memset(filename, 0, FILENAME_MAX);
+    memset(mode, 0, sizeof(mode));
+
+    while ((c = tree_data->contents[idx]) != ' ' && c != '\0' && c != EOF) {
+      mode[mode_idx++] = c;
+      idx++;
+    }
+    idx++;
+
+    while ((c = tree_data->contents[idx]) != '\0' && c != EOF) {
+      filename[filename_idx++] = c;
+      idx++;
+    }
+    idx++;
+
+    memcpy(sha, tree_data->contents + idx, 20);
+    idx += 20;
+
+    sha_to_hex(hex, (unsigned char *)sha);
+
+    tree_entry_t entry = {0};
+
+    entry.name = strdup(filename);
+    strcpy(entry.mode, mode);
+    memcpy(entry.sha, sha, 20);
+    strcpy(entry.hex, hex);
+
+    git_tree->entries[count] = entry;
+
+    count++;
+    mode_idx = 0;
+    filename_idx = 0;
+  }
+
+  git_tree->length = count;
+
+  return git_tree;
+}
+
 void writeGitObjectFromSha(unsigned char *file_contents, char *sha1_hex,
                            size_t file_size) {
   char object_path[56];
