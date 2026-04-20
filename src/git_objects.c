@@ -18,7 +18,7 @@ void get_file_path_from_sha(char *object_path, char *object_sha) {
           object_sha + 2);
 }
 
-void getHexFromHash(char hex[41], unsigned char *hash) {
+void sha_to_hex(char hex[41], unsigned char *hash) {
   for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
     sprintf(hex + (i * 2), "%02x", hash[i]);
   }
@@ -163,7 +163,7 @@ void write_git_object(GitObject *object, char *path) {
   SHA1((unsigned char *)to_hash, file_size, hash);
 
   char sha1_hex[41];
-  getHexFromHash(sha1_hex, hash);
+  sha_to_hex(sha1_hex, hash);
 
   writeGitObjectFromSha(to_hash, sha1_hex, file_size);
 
@@ -321,8 +321,8 @@ unsigned char *read_tree(char *path) {
   SHA1((unsigned char *)to_hash, file_size, hash);
 
   char tree_sha_hex[41];
-  getHexFromHash(tree_sha_hex, hash);
-  // getHexFromHash(tree_sha_hex, objects.data[0].sha1_raw);
+  sha_to_hex(tree_sha_hex, hash);
+  // sha_to_hex(tree_sha_hex, objects.data[0].sha1_raw);
 
   // printf("\n%s\n", tree_sha_hex);
 
