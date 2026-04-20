@@ -41,20 +41,18 @@ int read_object_header(GitObject *object, FILE *file) {
 
   object->header = header;
 
-  return 0;
+  return i;
 }
 
-int read_object_contents(GitObject *object, FILE *file, long capacity) {
+int read_object_contents(GitObject *object, FILE *file, size_t size) {
   char c;
   int i = 0;
-  char *contents = calloc(capacity, sizeof(char));
+  unsigned char *contents = calloc(size, sizeof(unsigned char));
   if (contents == NULL) {
     return -1;
   }
 
-  while ((c = fgetc(file)) != '\0' && c != EOF && i < capacity - 1) {
-    contents[i++] = c;
-  }
+  fread(contents, sizeof(unsigned char), size, file);
 
   object->contents = contents;
 
@@ -74,7 +72,7 @@ GitObject *read_git_object_from_sha(char *object_sha) {
 
   inf(object_file, temp);
 
-  long total_size = ftell(temp);
+  size_t total_size = ftell(temp);
   if (total_size < 0) {
     perror("ftell temp");
     fclose(object_file);
