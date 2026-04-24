@@ -101,7 +101,7 @@ GitObject *read_git_object_from_sha(char *object_sha) {
   return git_object;
 };
 
-git_tree_t *read_git_tree(GitObject *tree_data) {
+git_tree_t *parse_git_tree(GitObject *tree_data) {
   if (tree_data == NULL) {
     return NULL;
   }
@@ -111,8 +111,12 @@ git_tree_t *read_git_tree(GitObject *tree_data) {
     return NULL;
   }
 
-  git_tree_t *git_tree = malloc(sizeof(git_tree_t));
-  git_tree->entries = calloc(20, sizeof(tree_entry_t));
+  git_tree_t *git_tree = calloc(1, sizeof(git_tree_t));
+  if (!git_tree) {
+    perror("parse-tree");
+    return NULL;
+  }
+  tree_entry_t *ptemp = NULL;
 
   char filename[FILENAME_MAX];
   char mode[7];
@@ -154,6 +158,13 @@ git_tree_t *read_git_tree(GitObject *tree_data) {
     memcpy(entry.sha, sha, 20);
     strcpy(entry.hex, hex);
 
+    ptemp = realloc(git_tree->entries, (count + 1) * sizeof(tree_entry_t));
+    if (ptemp == NULL) {
+      perror("realloc");
+      // free tree method
+      return NULL;
+    }
+    git_tree->entries = ptemp;
     git_tree->entries[count] = entry;
 
     count++;

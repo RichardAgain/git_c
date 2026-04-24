@@ -46,8 +46,8 @@ typedef struct {
   size_t capacity;
 } GitObjectArray;
 
-unsigned char *read_tree(char *path);
-git_tree_t *read_git_tree(GitObject *data);
-
 void get_file_path_from_sha(char *object_path, char *object_sha);
 GitObject *read_git_object_from_sha(char *object_sha);
+git_tree_t *parse_git_tree(GitObject *data);
+
+unsigned char *read_tree(char *path);
