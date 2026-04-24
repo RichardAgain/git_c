@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #define MAX_HEADER_SIZE 64
-#define OBJECT_PATH_LENGTH 56
 
 typedef struct {
   char type_s[7];
@@ -46,8 +45,7 @@ typedef struct {
   size_t capacity;
 } GitObjectArray;
 
-void get_file_path_from_sha(char *object_path, char *object_sha);
-GitObject *read_git_object_from_sha(char *object_sha);
+GitObject *parse_git_object(FILE *file, size_t total_size);
 git_tree_t *parse_git_tree(GitObject *data);
 
 unsigned char *read_tree(char *path);

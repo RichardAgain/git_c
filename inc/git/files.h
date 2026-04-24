@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define OBJECT_PATH_LENGTH 56
+#define GIT_OBJECT_PATH_LENGTH 56
 
 typedef struct {
   FILE *file;

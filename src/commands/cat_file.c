@@ -1,8 +1,8 @@
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include "git/files.h"
 #include "git/objects.h"
 
 void cat_file(int argc, char *argv[]) {
@@ -12,18 +12,28 @@ void cat_file(int argc, char *argv[]) {
   }
 
   char *param = argv[2];
-  char *object_name = argv[3];
+  char *object_hex = argv[3];
 
   if (strcmp(argv[2], "-p") != 0) {
     fprintf((stderr), "Argument not implemented");
     return;
   }
 
-  GitObject *object = read_git_object_from_sha(object_name);
+  if (strlen(object_hex) != 40) {
+    printf("Not a valid object name\n");
+    return;
+  }
 
+  file_result_t fr = read_file_from_hex(object_hex);
+  if (fr.file == NULL) {
+    printf("Error reading file\n");
+    return;
+  }
+
+  GitObject *object = parse_git_object(fr.file, fr.size);
   if (object == NULL) {
-    perror("cat file");
-    free(object);
+    printf("Error parsing object\n");
+    return;
   }
 
   if (strcmp(object->header.type_s, "blob") != 0) {

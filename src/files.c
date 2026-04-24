@@ -9,7 +9,7 @@ void get_file_path_from_hex(char *object_path, char *object_hex) {
 }
 
 file_result_t read_file_from_hex(char *sha_hex) {
-  char path[OBJECT_PATH_LENGTH];
+  char path[GIT_OBJECT_PATH_LENGTH];
   get_file_path_from_hex(path, sha_hex);
 
   file_result_t fr = {
@@ -20,7 +20,7 @@ file_result_t read_file_from_hex(char *sha_hex) {
   FILE *temp = tmpfile();
   FILE *object_file = fopen(path, "rb");
   if (object_file == NULL || temp == NULL) {
-    perror("read git object");
+    perror("read file");
     return fr;
   }
 

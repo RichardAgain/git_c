@@ -12,6 +12,8 @@
 #include <zlib.h>
 
 #include "git/defs.h"
+#include "git/objects.h"
+#include "git/zpipe.h"
 
 void get_file_path_from_sha(char *object_path, char *object_sha) {
   sprintf(object_path, ".git/objects/%c%c/%s", object_sha[0], object_sha[1],
@@ -59,44 +61,17 @@ int read_object_contents(GitObject *object, FILE *file, size_t size) {
   return i;
 }
 
-GitObject *read_git_object_from_sha(char *object_sha) {
-  char path[OBJECT_PATH_LENGTH];
-  get_file_path_from_sha(path, object_sha);
-
-  FILE *temp = tmpfile();
-  FILE *object_file = fopen(path, "rb");
-  if (object_file == NULL || temp == NULL) {
-    perror("read git object");
-    return NULL;
-  }
-
-  inf(object_file, temp);
-
-  size_t total_size = ftell(temp);
-  if (total_size < 0) {
-    perror("ftell temp");
-    fclose(object_file);
-    fclose(temp);
-    return NULL;
-  }
-
-  rewind(temp);
-
+GitObject *parse_git_object(FILE *file, size_t total_size) {
   GitObject *git_object = malloc(sizeof(GitObject));
   git_object->contents = NULL;
 
-  int header_size = read_object_header(git_object, temp);
+  int header_size = read_object_header(git_object, file);
 
-  if (read_object_contents(git_object, temp, total_size - header_size) < 0) {
+  if (read_object_contents(git_object, file, total_size - header_size) < 0) {
     perror("git contents");
     free(git_object);
-    fclose(object_file);
-    fclose(temp);
     return NULL;
   };
-
-  fclose(object_file);
-  fclose(temp);
 
   return git_object;
 };
