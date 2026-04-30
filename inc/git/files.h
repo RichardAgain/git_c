@@ -9,5 +9,7 @@ typedef struct {
   size_t size;
 } file_result_t;
 
+file_result_t read_file_from_path(char *path);
+
 file_result_t read_file_from_hex(char *sha_hex);
 file_result_t write_file_from_hex(char *sha_hex);
