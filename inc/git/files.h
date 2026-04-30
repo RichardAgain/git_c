@@ -12,4 +12,4 @@ typedef struct {
 file_result_t read_file_from_path(char *path);
 
 file_result_t read_file_from_hex(char *sha_hex);
-file_result_t write_file_from_hex(char *sha_hex);
+file_result_t write_file_from_hex(char *sha_hex, FILE *input_f);

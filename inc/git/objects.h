@@ -20,8 +20,8 @@ typedef struct {
   } type;
   unsigned int file_mode;
   char *file_name;
-  unsigned char *sha1_raw;
-  char *sha1_hex;
+  char sha1_hex[41];
+  unsigned char sha1_raw[20];
 } GitObject;
 
 typedef struct {
@@ -47,5 +47,7 @@ typedef struct {
 
 GitObject *parse_git_object(FILE *file, size_t total_size);
 git_tree_t *parse_git_tree(GitObject *data);
+
+GitObject *write_git_object(void *contents, size_t size, FILE *file);
 
 unsigned char *read_tree(char *path);

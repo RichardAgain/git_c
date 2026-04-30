@@ -70,4 +70,35 @@ file_result_t read_file_from_hex(char *sha_hex) {
   return fr;
 }
 
-file_result_t write_file_from_hex(char *sha_hex);
+file_result_t write_file_from_hex(char *sha_hex, FILE *input_f) {
+  file_result_t fr = {0};
+
+  char path[GIT_OBJECT_PATH_LENGTH];
+  get_file_path_from_hex(path, sha_hex);
+
+  char folder_path[16];
+  strncpy(folder_path, path, 16);
+  folder_path[15] = 0;
+
+  printf("%s\n", folder_path);
+
+  if (mkdir(folder_path, 0777) != 0) {
+    // printf("Didnt create folder");
+  };
+
+  FILE *object_f = fopen(path, "w+b");
+
+  if (object_f == NULL) {
+    perror("fopen");
+    return fr;
+  }
+
+  rewind(input_f);
+  def(input_f, object_f, Z_DEFAULT_COMPRESSION);
+  size_t content_size = ftell(input_f);
+
+  fr.file = object_f;
+  fr.size = content_size;
+
+  return fr;
+};

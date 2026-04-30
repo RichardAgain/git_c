@@ -1,5 +1,3 @@
-#include "git/objects.h"
-#include "git/zpipe.h"
 #include <dirent.h>
 #include <openssl/sha.h>
 #include <stddef.h>
@@ -14,11 +12,6 @@
 #include "git/defs.h"
 #include "git/objects.h"
 #include "git/zpipe.h"
-
-void get_file_path_from_sha(char *object_path, char *object_sha) {
-  sprintf(object_path, ".git/objects/%c%c/%s", object_sha[0], object_sha[1],
-          object_sha + 2);
-}
 
 void sha_to_hex(char hex[41], unsigned char *hash) {
   for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
@@ -152,76 +145,33 @@ git_tree_t *parse_git_tree(GitObject *tree_data) {
   return git_tree;
 }
 
-void writeGitObjectFromSha(unsigned char *file_contents, char *sha1_hex,
-                           size_t file_size) {
-  char object_path[56];
-  get_file_path_from_sha(object_path, sha1_hex);
+GitObject *write_git_object(void *contents, size_t contents_size, FILE *file) {
+  GitObject *object = malloc(sizeof(GitObject));
 
-  char folder_path[16];
-  snprintf(folder_path, sizeof(folder_path), "%s", object_path);
+  char header_s[MAX_HEADER_SIZE];
+  int header_size =
+      snprintf(header_s, MAX_HEADER_SIZE, "blob %lu", contents_size);
 
-  if (mkdir(folder_path, 0777) != 0) {
-    // printf("Didnt create folder");
-  };
+  fwrite(header_s, sizeof(char), header_size, file);
+  fseek(file, 1, SEEK_CUR);
+  fwrite(contents, sizeof(char), contents_size, file);
 
-  FILE *temp_file = tmpfile();
-  FILE *result_file = fopen(object_path, "wb");
-
-  if (result_file != NULL) {
-    fwrite(file_contents, sizeof(char), file_size, temp_file);
-    rewind(temp_file);
-
-    def(temp_file, result_file, Z_DEFAULT_COMPRESSION);
-  }
-
-  fclose(temp_file);
-
-  if (result_file != NULL)
-    fclose(result_file);
-}
-
-void write_git_object(GitObject *object, char *path) {
-  FILE *ofile = fopen(path, "rb");
-
-  if (ofile == NULL) {
-    perror("File not found");
-    return;
-  }
-
-  fseek(ofile, 0, SEEK_END);
-  long content_size = ftell(ofile);
-  rewind(ofile);
-
-  char c;
-  int i = 0;
-  char contents[content_size];
-  while ((c = fgetc(ofile)) != EOF) {
-    contents[i] = c;
-    contents[i + 1] = '\0';
-    i++;
-  }
-
-  int header_size = snprintf(NULL, 0, "blob %ld", content_size);
-  int file_size = header_size + 1 + content_size;
-
+  size_t file_size = header_size + contents_size + 1;
   unsigned char to_hash[file_size];
-  snprintf((char *)to_hash, header_size + 1, "blob %ld", content_size);
-  memcpy(to_hash + header_size + 1, contents, sizeof(contents));
 
-  unsigned char hash[SHA_DIGEST_LENGTH]; // == 20
+  fseek(file, 0, SEEK_SET);
+  fread(to_hash, sizeof(unsigned char), file_size, file);
+
+  unsigned char hash[SHA_DIGEST_LENGTH];
   SHA1((unsigned char *)to_hash, file_size, hash);
 
-  char sha1_hex[41];
-  sha_to_hex(sha1_hex, hash);
+  char hex[41];
+  sha_to_hex(hex, hash);
 
-  writeGitObjectFromSha(to_hash, sha1_hex, file_size);
-
-  object->sha1_raw = malloc(20);
   memcpy(object->sha1_raw, hash, 20);
+  memcpy(object->sha1_hex, hex, 41);
 
-  object->sha1_hex = strdup(sha1_hex);
-
-  fclose(ofile);
+  return object;
 }
 
 char *getGitTypeName(GitObject *object) {
