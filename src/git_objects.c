@@ -11,7 +11,6 @@
 
 #include "git/defs.h"
 #include "git/objects.h"
-#include "git/zpipe.h"
 
 void sha_to_hex(char hex[41], unsigned char *hash) {
   for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
@@ -159,8 +158,8 @@ GitObject *write_git_object(FILE *out, void *contents, size_t contents_size) {
   size_t file_size = header_size + contents_size + 1;
   unsigned char to_hash[file_size];
 
-  fseek(file, 0, SEEK_SET);
-  fread(to_hash, sizeof(unsigned char), file_size, file);
+  fseek(out, 0, SEEK_SET);
+  fread(to_hash, sizeof(unsigned char), file_size, out);
 
   unsigned char hash[SHA_DIGEST_LENGTH];
   SHA1((unsigned char *)to_hash, file_size, hash);
@@ -174,161 +173,8 @@ GitObject *write_git_object(FILE *out, void *contents, size_t contents_size) {
   return object;
 }
 
-char *getGitTypeName(GitObject *object) {
-  switch (object->type) {
-  case TREE:
-    return "tree";
-  case BLOB:
-    return "blob";
-  default:
-    return "blob";
-  }
-}
-
-int compare_object_names(const void *a, const void *b) {
-  const GitObject *obj_1 = (GitObject *)a;
-  const GitObject *obj_2 = (GitObject *)b;
-  return strcmp(obj_1->file_name, obj_2->file_name);
-}
-
-void print_git_tree(GitObjectArray *objects) {
-  for (int i = 0; i < objects->length; i++) {
-    printf("%s %s\t%s\n", getGitTypeName(&objects->data[i]),
-           objects->data[i].sha1_hex, objects->data[i].file_name);
-  }
-}
-
-unsigned char *read_tree(char *path) {
-  DIR *rootdir;
-  struct dirent *entry;
-
-  rootdir = opendir(path);
-
-  GitObjectArray objects = {};
-
-  char *ptrPath = strdup(path);
-  char *nextPath = {};
-
-  size_t pathSize = strlen(path);
-  size_t nextPathSize = 0;
-
-  while ((entry = readdir(rootdir)) != NULL) {
-    if ((strncmp(entry->d_name, "..", 2) == 0) ||
-        ((strncmp(entry->d_name, ".", 1) == 0) &&
-         (strlen(entry->d_name) == 1)) ||
-        ((strncmp(entry->d_name, ".git", 4) == 0) &&
-         (strlen(entry->d_name) == 4))) {
-      continue;
-    }
-
-    nextPathSize = (strlen(entry->d_name) + pathSize) + 10;
-    if (strlen(ptrPath) < nextPathSize) {
-      nextPath = realloc(ptrPath, nextPathSize);
-    }
-
-    strcat(nextPath, "/");
-    strcat(nextPath, entry->d_name);
-
-    struct stat fileStat;
-
-    // check file
-    if (entry->d_type == DT_REG) {
-      stat(nextPath, &fileStat);
-
-      GitObject object = {
-          .type = BLOB,
-          .file_name = entry->d_name,
-          .file_mode = fileStat.st_mode,
-          .sha1_raw = 0,
-          .sha1_hex = 0,
-      };
-
-      write_git_object(&object, nextPath);
-
-      arr_append(objects, object);
-    }
-
-    // check tree
-    if (entry->d_type == DT_DIR) {
-      stat(nextPath, &fileStat);
-
-      GitObject object = {
-          .type = TREE,
-          .file_name = entry->d_name,
-          .file_mode = fileStat.st_mode,
-          .sha1_raw = read_tree(nextPath),
-      };
-
-      arr_append(objects, object);
-    }
-
-    ptrPath = strdup(path);
-  }
-
-  qsort(objects.data, objects.length, sizeof(GitObject), compare_object_names);
-
-  unsigned char tree_contents[4098];
-  size_t contents_position = 0;
-
-  memset(tree_contents, 0, 4098);
-
-  for (int i = 0; i < objects.length; i++) {
-    GitObject object = objects.data[i];
-
-    if (sizeof(object) == 0) {
-      continue;
-    }
-
-    char object_header[100];
-    size_t object_header_size = snprintf(object_header, 100, "%o %s",
-                                         object.file_mode, object.file_name);
-
-    for (size_t j = 0; j < object_header_size; j++) {
-      tree_contents[contents_position++] = object_header[j];
-    }
-
-    tree_contents[contents_position++] = '\0';
-
-    unsigned char sha1_raw[25];
-    memset(sha1_raw, 0, 25);
-    memcpy(sha1_raw, object.sha1_raw, 25);
-
-    for (size_t j = 0; j < 20; j++) {
-      tree_contents[contents_position++] = object.sha1_raw[j];
-    }
-  }
-
-  char tree_header[100];
-  memset(tree_header, 0, 100);
-  size_t header_size =
-      snprintf(tree_header, 100, "tree %ld", contents_position - 1);
-  size_t file_size = header_size + contents_position;
-
-  // printf("header: %s size: %zu\n", tree_header, header_size);
-
-  unsigned char to_hash[file_size];
-  memset(to_hash, 0, file_size);
-  memcpy(to_hash, tree_header, header_size);
-  memset(to_hash + header_size, 0, 1);
-  memcpy(to_hash + header_size + 1, tree_contents, file_size + 1);
-
-  // for (size_t i = 0; i < file_size; i++) {
-  //   printf("%c", to_hash[i]);
-  // }
-
-  unsigned char *hash = malloc(SHA_DIGEST_LENGTH); // == 20
-  SHA1((unsigned char *)to_hash, file_size, hash);
-
-  char tree_sha_hex[41];
-  sha_to_hex(tree_sha_hex, hash);
-  // sha_to_hex(tree_sha_hex, objects.data[0].sha1_raw);
-
-  // printf("\n%s\n", tree_sha_hex);
-
-  writeGitObjectFromSha(to_hash, tree_sha_hex, file_size);
-
-  free(objects.data);
-  closedir(rootdir);
-
-  return hash;
-}
+// int compare_object_names(const void *a, const void *b) {
+//   const GitObject *obj_1 = (GitObject *)a;
+//   const GitObject *obj_2 = (GitObject *)b;
+//   return strcmp(obj_1->file_name, obj_2->file_name);
+// }
