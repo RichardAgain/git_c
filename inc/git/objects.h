@@ -12,14 +12,6 @@ typedef struct {
   object_header_t header;
   unsigned char *contents;
 
-  enum {
-    BLOB,
-    TREE,
-    COMMIT,
-    TAG,
-  } type;
-  unsigned int file_mode;
-  char *file_name;
   char sha1_hex[41];
   unsigned char sha1_raw[20];
 } GitObject;
@@ -48,6 +40,4 @@ typedef struct {
 GitObject *parse_git_object(FILE *file, size_t total_size);
 git_tree_t *parse_git_tree(GitObject *data);
 
-GitObject *write_git_object(void *contents, size_t size, FILE *file);
-
-unsigned char *read_tree(char *path);
+GitObject *write_git_object(FILE *out, void *contents, size_t size);

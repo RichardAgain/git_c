@@ -33,7 +33,7 @@ void hash_object(int argc, char *argv[]) {
     return;
   }
 
-  GitObject *object = write_git_object(contents, fr.size, temp);
+  GitObject *object = write_git_object(temp, contents, fr.size);
 
   printf("%s\n", object->sha1_hex);
 

@@ -145,16 +145,16 @@ git_tree_t *parse_git_tree(GitObject *tree_data) {
   return git_tree;
 }
 
-GitObject *write_git_object(void *contents, size_t contents_size, FILE *file) {
+GitObject *write_git_object(FILE *out, void *contents, size_t contents_size) {
   GitObject *object = malloc(sizeof(GitObject));
 
   char header_s[MAX_HEADER_SIZE];
   int header_size =
       snprintf(header_s, MAX_HEADER_SIZE, "blob %lu", contents_size);
 
-  fwrite(header_s, sizeof(char), header_size, file);
-  fseek(file, 1, SEEK_CUR);
-  fwrite(contents, sizeof(char), contents_size, file);
+  fwrite(header_s, sizeof(char), header_size, out);
+  fseek(out, 1, SEEK_CUR);
+  fwrite(contents, sizeof(char), contents_size, out);
 
   size_t file_size = header_size + contents_size + 1;
   unsigned char to_hash[file_size];
